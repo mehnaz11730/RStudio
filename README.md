@@ -1,4 +1,4 @@
-# RStudio
+# RStudio-assignment
 Genomic Analysis and Comparative Genomics of E. coli and Campylobacter coli
 Project Purpose: Quantify and compare fundamental genomic features—gene count, composition, and selection pressures—between a versatile generalist bacterium (E. coli) and a specialized pathogen (C. coli).
 
