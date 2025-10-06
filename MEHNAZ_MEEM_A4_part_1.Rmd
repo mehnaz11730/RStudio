@@ -1,0 +1,201 @@
+---
+title: "Assignment 4"
+author: "Mehnaz_meem"
+date: "2025-10-05"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+##The file “gene_expression.tsv” contains RNA-seq count data for three samples of interest.
+##Read in the file, making the gene identifiers the row names. Show a table of values for the first six genes.
+
+```{r}
+library("R.utils")
+```
+
+```{r}
+URL="https://raw.githubusercontent.com/ghazkha/Assessment4/refs/heads/main/gene_expression.tsv"
+download.file(URL,destfile="gene_expression.tsv")
+```
+```{r}
+list.files()
+```
+
+##The file “growth_data.csv” contains measurements for tree circumference growing at two sites
+```{r}
+URL="https://raw.githubusercontent.com/ghazkha/Assessment4/refs/heads/main/growth_data.csv"
+download.file(URL,destfile="growth_data.csv")
+```
+```{r}
+list.files()
+```
+
+##Question 1
+##Read the file data, first six genes
+```{r}
+gene_data <- read.delim("gene_expression.tsv", row.names = 1, header = TRUE)
+head(gene_data, 6)
+```
+##Question 2
+##New column with mean of other columns
+
+```{r}
+gene_data$Mean <- rowMeans(gene_data)
+```
+
+##Showing table of values for first six genes
+```{r}
+head(gene_data, 6)
+```
+##Question 3
+##List the 10 genes with the highest mean expression
+```{r}
+top10_genes <- gene_data[order(gene_data$Mean, decreasing = TRUE), ]
+head(top10_genes, 10)
+```
+
+##Question 4
+##Determine the number of genes with a mean <10
+```{r}
+num_genes_below_10 <- sum(gene_data$Mean < 10)
+cat(num_genes_below_10)
+```
+
+
+##Question 5
+##Make a histogram plot of the mean values
+```{r}
+hist(gene_data$Mean,
+breaks = 1000,
+main = "Distribution of Mean Gene Expression",
+xlab = "Mean Expression Level",
+ylab = "Frequency",
+xlim = c(0,30000),
+col = "blue")
+```
+
+
+
+##Question 6
+##Import growth_data csv file into an R object
+```{r}
+growth <- read.csv("growth_data.csv", header = TRUE)
+```
+
+##Column names of growth_data
+```{r}
+colnames(growth)
+```
+
+
+##Question 7
+##Calculate the mean and standard deviation of tree circumference at the start and end of the study at both sites
+```{r}
+# Mean and Standard Deviation (2005) & (2020)
+growth_stats_raw <- aggregate(cbind(Circumf_2005_cm, Circumf_2020_cm)~ Site,
+data = growth,
+FUN = function(x) c(mean = mean(x, na.rm = TRUE),
+sd = sd(x, na.rm = TRUE)))
+
+
+# Split the matrix columns into separate columns
+growth_stats_summary <- data.frame(
+Site = growth_stats_raw$Site,
+Mean_2005 = growth_stats_raw$Circumf_2005_cm[, "mean"],
+SD_2005 = growth_stats_raw$Circumf_2005_cm[, "sd"],
+Mean_2020 = growth_stats_raw$Circumf_2020_cm[, "mean"],
+SD_2020 = growth_stats_raw$Circumf_2020_cm[, "sd"]
+)
+
+
+
+# Display table results
+print(growth_stats_summary)
+```
+
+##Question 8
+##Make a box plot of tree circumference at the start and end of the study at both sites.
+```{r}
+# Prepare data for boxplot
+northeast_start <- growth$Circumf_2005_cm[growth$Site== "northeast"]
+northeast_end <- growth$Circumf_2020_cm[growth$Site== "northeast"]
+southwest_start <- growth$Circumf_2005_cm[growth$Site== "southwest"]
+southwest_end <- growth$Circumf_2020_cm[growth$Site== "southwest"]
+
+
+# Create boxplot
+boxplot(northeast_start, northeast_end, southwest_start, southwest_end,
+names = c("Northeast\nStart", "Northeast\nEnd", "Southwest\nStart", "Southwest\nEnd"),
+main = "Tree Circumference by Site and Time Point",
+xlab = "Site and Time Point",
+ylab = "Circumference (cm)",
+col = c("lightcoral", "blue", "lightcoral", "blue"),
+border = "black")
+
+
+# Add a legend
+legend("topleft",
+legend = c("Start", "End"),
+fill = c("lightcoral", "blue"),
+title = "Time Point")
+```
+
+##Question 9
+##Calculate the mean growth over the last 10 years at each site.
+```{r}
+# Growth from 2010 to 2020
+growth$Growth_10yr <- growth$Circumf_2020_cm- growth$Circumf_2010_cm
+
+
+# Mean 10 year growth for each site
+mean_growth_by_site <- aggregate(Growth_10yr~ Site, data = growth, FUN = mean)
+
+
+# Show results
+print(mean_growth_by_site)
+```
+
+
+##Question 10
+##Using T-test to estimate the growth beteen two sites
+```{r}
+t_test_result <- t.test(Growth_10yr~ Site, data = growth)
+
+## Print t-test results with interpretation
+cat("\n T-Test: Comparing 10-Year Growth Between Sites\n")
+```
+
+```{r}
+cat("--------------------------------------------------\n")
+```
+
+```{r}
+cat("P-value:", round(t_test_result$p.value, 4), "\n")
+```
+
+```{r}
+cat("95% Confidence Interval:",
+round(t_test_result$conf.int[1], 2), "to",
+round(t_test_result$conf.int[2], 2), "\n")
+```
+
+```{r}
+cat("Mean Growth - Northeast:", round(t_test_result$estimate["mean in group Northeast"], 2), "cm\n")
+```
+
+```{r}
+cat("Mean Growth - Southwest:", round(t_test_result$estimate["mean in group Southwest"], 2), "cm\n")
+```
+
+```{r}
+# Corrected R Code for Interpretation Block
+if (t_test_result$p.value < 0.05) {
+  cat("Conclusion: There is a statistically significant difference in 10-year growth between sites (p < 0.05).\n")
+} else {
+  # Replacing the Unicode character (\u2265) with the ASCII text "> ="
+  cat("Conclusion: No statistically significant difference in 10-year growth between sites (p >= 0.05).\n")
+}
+```
+

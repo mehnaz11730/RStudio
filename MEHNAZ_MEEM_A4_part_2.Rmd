@@ -1,0 +1,452 @@
+---
+title: "MEHNAZ_MEEM_A4_part_2"
+author: "Mehnaz_meem"
+date: "2025-10-06"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+
+##Question 1
+##Downloading the gemone
+
+
+```{r}
+library(R.utils)
+```
+
+```{r}
+#Download and Process E. coli CDS
+#E. coli K-12 MG1655 (GCA_000005845) CDS file
+URL="http://ftp.ensemblgenomes.org/pub/bacteria/release-53/fasta/bacteria_0_collection/escherichia_coli_str_k_12_substr_mg1655_gca_000005845/cds/Escherichia_coli_str_k_12_substr_mg1655_gca_000005845.ASM584v2.cds.all.fa.gz"
+download.file(URL,destfile="ecoli_cds.fa.gz")
+
+if (!file.exists("ecoli_cds.fa")) {
+  R.utils::gunzip("ecoli_cds.fa.gz")
+}
+
+list.files()
+```
+```{r}
+#Download and Process C. coli CDS
+#Campylobacter coli (GCA_003780985) CDS file
+URL="https://ftp.ensemblgenomes.ebi.ac.uk/pub/bacteria/release-62/fasta/bacteria_46_collection/campylobacter_coli_gca_003780985/cds/Campylobacter_coli_gca_003780985.PDT000395653.1.cds.all.fa.gz"
+download.file(URL,destfile="ccoli_cds.fa.gz")
+
+if (!file.exists("ccoli_cds.fa")) {
+  R.utils::gunzip("ccoli_cds.fa.gz")
+}
+
+list.files()
+```
+
+
+##Calculates the total number of Coding DNA Sequences (CDS) for both organisms
+```{r}
+library(Biostrings)
+```
+
+# Load the CDS files 
+```{r}
+ecoli_cds_dna <- readDNAStringSet("ecoli_cds.fa")
+ccoli_cds_dna <- readDNAStringSet("ccoli_cds.fa")
+```
+
+# Calculate the number of coding sequences
+```{r}
+num_ecoli <- length(ecoli_cds_dna)
+num_ccoli <- length(ccoli_cds_dna)
+```
+
+
+# Create the results table
+```{r}
+cds_count_table <- data.frame(
+  Organism = c("E. coli (K-12 MG1655)", "C. coli (GCA_003780985)"),
+  `Number of Coding Sequences` = c(num_ecoli, num_ccoli)
+)
+```
+
+# Print the table
+```{r}
+print(cds_count_table)
+```
+
+##The main difference lies in their gene set size, which reflects their lifestyles: E.coli (with >2.7× the genes) is a versatile generalist, while C.coli is a specialized pathogen with a streamlined, reduced genome optimized for a stable host environment.
+
+
+
+##Question 2
+##Calculation of the total base pair length of all coding sequences 
+
+```{r}
+library(Biostrings)
+```
+
+# Load the CDS files 
+```{r}
+ecoli_cds_dna <- readDNAStringSet("ecoli_cds.fa")
+ccoli_cds_dna <- readDNAStringSet("ccoli_cds.fa")
+```
+
+# Calculate the total length of coding DNA (sum of all sequence widths)
+```{r}
+total_length_ecoli <- sum(width(ecoli_cds_dna))
+total_length_ccoli <- sum(width(ccoli_cds_dna))
+```
+
+# Create the results table using base R data.frame()
+```{r}
+total_length_table <- data.frame(
+  Organism = c("E. coli (K-12 MG1655)", "C. coli (GCA_003780985)"),
+  `Total_Coding_DNA_Length_(base_pairs)` = c(total_length_ecoli, total_length_ccoli),
+  row.names = NULL
+)
+```
+
+# Print the table
+```{r}
+print(total_length_table)
+```
+##E. coli possesses approx 2.75 times more total coding DNA, supporting its versatile generalist role with a higher gene count. Conversely, C. coli's reduced coding length reflects its streamlined, specialized pathogenic existence.
+
+##Question 3
+##Calculation of the mean and median lengths of all coding sequences 
+##Generate a boxplot for visual comparison.
+
+```{r}
+library(Biostrings)
+library(ggplot2)
+```
+
+##Load the CDS files
+```{r}
+ecoli_cds_dna <- readDNAStringSet("ecoli_cds.fa")
+ccoli_cds_dna <- readDNAStringSet("ccoli_cds.fa")
+```
+
+##Calculate lengths for all sequences
+```{r}
+ecoli_lengths <- width(ecoli_cds_dna)
+ccoli_lengths <- width(ccoli_cds_dna)
+```
+
+##Calculate Mean and Median
+```{r}
+ecoli_stats <- c(Mean = mean(ecoli_lengths), Median = median(ecoli_lengths))
+ccoli_stats <- c(Mean = mean(ccoli_lengths), Median = median(ccoli_lengths))
+```
+
+##Create the summary table
+```{r}
+stats_df <- data.frame(
+  Organism = c("E. coli (K-12 MG1655)", "C. coli (GCA_003780985)"),
+  Mean_Length_bp = c(ecoli_stats["Mean"], ccoli_stats["Mean"]),
+  Median_Length_bp = c(ecoli_stats["Median"], ccoli_stats["Median"]),
+  row.names = NULL
+)
+print(stats_df)
+```
+
+
+##Create a combined data frame for the boxplot 
+```{r}
+length_df <- data.frame(
+  Length = c(ecoli_lengths, ccoli_lengths),
+  Organism = factor(c(rep("E. coli", length(ecoli_lengths)), rep("C. coli", length(ccoli_lengths))))
+)
+```
+
+
+##Generate the Boxplot
+```{r}
+p_boxplot <- ggplot(length_df, aes(x = Organism, y = Length, fill = Organism)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Distribution of Coding Sequence Lengths",
+    y = "Length (base pairs)",
+    x = "Organism"
+  ) +
+  theme_minimal()
+print(p_boxplot)
+```
+##The key difference lies not in average length (mean/median are similar), but in gene count and complexity. Both distributions are right-skewed, yet E. coli exhibits slightly more long gene outliers, reflecting its broader functional complexity and capacity for multi-domain proteins compared to the streamlined C. coli genome.
+
+
+##Question 4
+##Calculations and plots the frequency of DNA bases and amino acids for the total coding and protein sequences of both organisms.
+
+
+##Nucleotide Frequency
+
+##Calculate total length
+```{r}
+total_length_ecoli <- sum(width(ecoli_cds_dna))
+total_length_ccoli <- sum(width(ccoli_cds_dna))
+```
+
+##Collapse all CDS into a single string for frequency calculation
+```{r}
+ecoli_nuc_freq <- alphabetFrequency(DNAStringSet(paste(ecoli_cds_dna, collapse = "")))[1, 1:4] / total_length_ecoli
+ccoli_nuc_freq <- alphabetFrequency(DNAStringSet(paste(ccoli_cds_dna, collapse = "")))[1, 1:4] / total_length_ccoli
+```
+
+##Create data frame for plotting
+```{r}
+nuc_df <- data.frame(
+  Nucleotide = names(ecoli_nuc_freq),
+  Ecoli = ecoli_nuc_freq,
+  Ccoli = ccoli_nuc_freq
+)
+
+nuc_df_long <- data.frame(
+  Nucleotide = rep(nuc_df$Nucleotide, 2),
+  Organism = c(rep("E. coli", 4), rep("C. coli", 4)),
+  Frequency = c(nuc_df$Ecoli, nuc_df$Ccoli)
+)
+```
+
+
+##Nucleotide Bar Plot
+```{r}
+p_nuc_bar <- ggplot(nuc_df_long, aes(x = Nucleotide, y = Frequency, fill = Organism)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(
+    title = "Nucleotide Frequency in Total CDS", 
+    y = "Proportion",
+    subtitle = paste("E. coli G+C:", round(sum(ecoli_nuc_freq[c("G", "C")])*100, 1), 
+                     "%, C. coli G+C:", round(sum(ccoli_nuc_freq[c("G", "C")])*100, 1), "%")
+    ) +
+  theme_minimal()
+print(p_nuc_bar)
+```
+
+
+
+##Amino Acid Frequency
+
+##Translate DNA to Protein Sequences
+```{r}
+ecoli_protein <- Biostrings::translate(ecoli_cds_dna)
+ccoli_protein <- Biostrings::translate(ccoli_cds_dna)
+```
+
+
+##Collapse protein sequences and calculate frequency (using AA_ALPHABET to exclude symbols like '*')
+```{r}
+ecoli_aa_freq <- alphabetFrequency(AAStringSet(paste(ecoli_protein, collapse = "")))[1, AA_ALPHABET]
+ccoli_aa_freq <- alphabetFrequency(AAStringSet(paste(ccoli_protein, collapse = "")))[1, AA_ALPHABET]
+```
+
+# Normalize
+```{r}
+ecoli_aa_freq_norm <- ecoli_aa_freq / sum(ecoli_aa_freq)
+ccoli_aa_freq_norm <- ccoli_aa_freq / sum(ccoli_aa_freq)
+```
+
+# Create data frame for plotting
+```{r}
+aa_df_long <- data.frame(
+  Amino_Acid = rep(names(ecoli_aa_freq_norm), 2),
+  Organism = c(rep("E. coli", length(AA_ALPHABET)), rep("C. coli", length(AA_ALPHABET))),
+  Frequency = c(ecoli_aa_freq_norm, ccoli_aa_freq_norm)
+)
+```
+
+
+# Amino Acid Bar Plot
+```{r}
+p_aa_bar <- ggplot(aa_df_long, aes(x = Amino_Acid, y = Frequency, fill = Organism)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "Amino Acid Frequency in Total Protein Sequence", y = "Proportion") +
+  theme_minimal()
+print(p_aa_bar)
+
+```
+##Nucleotide:C. coli is highly A/T-rich G+C approx 30%, imposing a major compositional bias on its coding sequences, whereas E. coli maintains a balanced G+C content near 50%.
+
+##Amino Acid: This bias translates directly to protein: C. coli favors A/T -rich amino acids (e.g., Lysine, Isoleucine), demonstrating a genomic constraint where the nucleotide pool limits the available protein components; E. coli favors G/C-rich amino acids (e.g., Alanine, Glycine).
+
+##Question 5
+##Read coding DNA Sequences
+```{r}
+library(seqinr)
+cds_ecoli <- read.fasta("ecoli_cds.fa")
+cds_ccoli <- read.fasta("ccoli_cds.fa")
+```
+##Calculate RSCU
+```{r}
+codon_ecoli <- uco(unlist(cds_ecoli), index = "rscu", as.data.frame = TRUE)
+codon_ccoli <- uco(unlist(cds_ccoli), index = "rscu", as.data.frame = TRUE)
+```
+
+##Sort codons by RSCU values
+
+##E.coli
+```{r}
+sorted_ecoli <- codon_ecoli[order(codon_ecoli$RSCU), ]
+top10_codons_ecoli_under <- head(sorted_ecoli, 10)
+top10_codons_ecoli_over <- head(sorted_ecoli[order(-sorted_ecoli$RSCU), ], 10)
+```
+
+##C.coli
+```{r}
+sorted_ccoli <- codon_ccoli[order(codon_ccoli$RSCU), ]
+top10_codons_ccoli_under <- head(sorted_ccoli, 10)
+top10_codons_ccoli_over <- head(sorted_ccoli[order(-sorted_ccoli$RSCU), ], 10)
+```
+
+##Print top codons
+```{r}
+print(top10_codons_ecoli_under)
+print(top10_codons_ecoli_over)
+print(top10_codons_ccoli_under)
+print(top10_codons_ccoli_over)
+```
+
+
+##Create Barplots
+```{r}
+par(mfrow = c(2, 2))  # 2x2 layout for four plots
+
+barplot(top10_codons_ecoli_under$RSCU, names.arg = top10_codons_ecoli_under$codon,
+        xlab = "Codons", ylab = "RSCU", col = "lightblue",
+        main = "E. coli: 10 Least Used Codons", las = 2)
+
+barplot(top10_codons_ecoli_over$RSCU, names.arg = top10_codons_ecoli_over$codon,
+        xlab = "Codons", ylab = "RSCU", col = "steelblue",
+        main = "E. coli: 10 Most Used Codons", las = 2)
+
+barplot(top10_codons_ccoli_under$RSCU, names.arg = top10_codons_ccoli_under$codon,
+        xlab = "Codons", ylab = "RSCU", col = "lightpink",
+        main = "C. coli: 10 Least Used Codons", las = 2)
+
+barplot(top10_codons_ccoli_over$RSCU, names.arg = top10_codons_ccoli_over$codon,
+        xlab = "Codons", ylab = "RSCU", col = "tomato",
+        main = "C. coli: 10 Most Used Codons", las = 2)
+```
+
+##Figure:Codon usage bias (RSCU) in Escherichia coli and Campylobacter coli.  
+The plots show the top 10 over-represented and under-represented codons in each organism.  
+ 
+
+E. coli shows a stronger codon bias, frequently using codons ending with G or C, consistent with its higher GC content and efficient translational machinery.  
+Campylobacter coli exhibits weaker bias, with higher preference for A- or T-ending codons, reflecting its lower genomic GC content.  
+ 
+These differences in codon bias may relate to variations in genomic composition, tRNA abundance, and adaptation to different environmental or metabolic conditions.
+
+##Question 6
+```{r}
+library(Biostrings) 
+library(kmer) 
+library(dplyr) 
+library(ggplot2)
+```
+
+
+##Load CDS files (using the Biostrings function, which is often cleaner)
+
+```{r}
+cds_ecoli <- readDNAStringSet("ecoli_cds.fa")
+cds_ccoli <- readDNAStringSet("ccoli_cds.fa")
+```
+
+##Create protein object
+```{r}
+prot_ecoli <- Biostrings::translate(cds_ecoli)
+prot_ccoli <- Biostrings::translate(cds_ccoli)
+```
+
+##Convert to character vectors
+```{r}
+prot_ecoli_vec <- as.character(prot_ecoli)
+prot_ccoli_vec <- as.character(prot_ccoli)
+```
+
+
+##Define amino acid alphabet (excluding stop codons)
+```{r}
+aa <- sort(unique(unlist(strsplit(paste0(prot_ecoli_vec, collapse = ""), ""))))
+aa <- aa[aa != "*"]
+```
+
+##Function to count protein k-mers
+```{r}
+# --- Function to count protein k-mers ---
+get_protein_kmer_freq <- function(protein_seq, k) {
+  # Collapse all sequences into one string
+  all_seq <- paste(as.character(protein_seq), collapse = "")
+  
+  # Extract k-mers
+  kmers <- substring(all_seq, 1:(nchar(all_seq)-k+1), k:(nchar(all_seq)))
+  
+  # Count frequency
+  freq_table <- table(kmers)
+  
+  # Convert to data frame
+  df <- as.data.frame(freq_table, stringsAsFactors = FALSE)
+  colnames(df) <- c("kmer", "frequency")
+  
+  # Sort by descending frequency
+  df <- df %>% arrange(desc(frequency))
+  return(df)
+}
+```
+
+##Compute 3-mer frequencies
+
+```{r}
+freq3_ecoli <- get_protein_kmer_freq(prot_ecoli, 3)
+freq3_ccoli <- get_protein_kmer_freq(prot_ccoli, 3)
+```
+
+##Identify top 10 over- and under-represented k-mers
+```{r}
+over_ecoli <- head(freq3_ecoli, 10)
+under_ecoli <- tail(freq3_ecoli, 10)
+```
+
+```{r}
+over_ccoli <- head(freq3_ccoli, 10)
+under_ccoli <- tail(freq3_ccoli, 10)
+```
+
+##Add organism column
+```{r}
+over_ecoli$Organism <- "E. coli"
+under_ecoli$Organism <- "E. coli"
+over_ccoli$Organism <- "C. coli"
+under_ccoli$Organism <- "C. coli"
+```
+
+##Combine data frames for plotting
+```{r}
+over_df <- rbind(over_ecoli, over_ccoli)
+under_df <- rbind(under_ecoli, under_ccoli)
+```
+
+##Plot over-represented 3-mers
+```{r}
+ggplot(over_df, aes(x = reorder(kmer, frequency), y = frequency, fill = Organism)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(title = "Top 10 Over-represented 3-mers in Protein Sequences",
+       x = "3-mer",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+##Plot under-represented 3-mers
+```{r}
+ggplot(under_df, aes(x = reorder(kmer, frequency), y = frequency, fill = Organism)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(title = "Top 10 Under-represented 3-mers in Protein Sequences",
+       x = "3-mer",
+       y = "Frequency") +
+  theme_minimal()
+```
+
